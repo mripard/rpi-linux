@@ -359,6 +359,53 @@ int vc4_hvs_atomic_check(struct drm_crtc *crtc, struct drm_atomic_state *state)
 	return 0;
 }
 
+/*
+ * The logic in vc4_crtc_handle_vblank() will only report the vblank
+ * event if the active dlist in the HVS channel matches what we're
+ * expecting.
+ *
+ * This used to be compared with crtc->state, however this raised a
+ * subtle bug when we had the following sequence:
+ *
+ * - A non-blocking commit (commit 1) is queued, its workqueue being
+ *   scheduled.
+ *
+ * - Right after that commit returns, a new blocking commit (commit 2)
+ *   is done. If this commit goes through drm_atomic_check_only(), it
+ *   will then do the remaining part of the commit, will call
+ *   commit_tail() which will call drm_atomic_helper_wait_for_dependencies()
+ *   for commit 1. However, drm_atomic_helper_swap_state has been
+ *   called, so at that point crtc->state points to the state associated
+ *   to commit 2.
+ *
+ * - Now, our vblank interrupts fires. If we use the vc4_crtc_state
+ *   structure associated to state->crtc and its mm.start field to
+ *   compare with the active dlist, we're actually comparing the dlist
+ *   from commit 2 (that has never been setup), while we expect the one
+ *   from commit 1.
+ *
+ * This leads to the vblank event associated to commit 1 never being
+ * reported (even though we had interrupts), and commit 2 waiting until
+ * it times out and reporting an error.
+ *
+ * Since everything in commit_tail works as expected and is serialised
+ * between drm_atomic_helper_wait_for_dependencies() and
+ * drm_atomic_helper_wait_for_vblanks(), we can store the dlist we
+ * expect to be active after this commit in the struct vc4_crtc and
+ * compare the active dlist in our vblank to this value.
+ */
+void vc4_hvs_atomic_begin(struct drm_crtc *crtc,
+			  struct drm_atomic_state *state)
+{
+	struct vc4_crtc *vc4_crtc = to_vc4_crtc(crtc);
+	struct drm_crtc_state *crtc_state =
+		drm_atomic_get_new_crtc_state(state, crtc);
+	struct vc4_crtc_state *vc4_crtc_state =
+		to_vc4_crtc_state(crtc_state);
+
+	vc4_crtc->current_dlist = vc4_crtc_state->mm.start;
+}
+
 static void vc4_hvs_update_dlist(struct drm_crtc *crtc)
 {
 	struct drm_device *dev = crtc->dev;

@@ -654,9 +654,13 @@ static void vc4_crtc_handle_page_flip(struct vc4_crtc *vc4_crtc)
 	u32 chan = vc4_state->assigned_channel;
 	unsigned long flags;
 
+	/*
+	 * Before changing this, please have a look at the comment for
+	 * vc4_hvs_atomic_begin().
+	 */
 	spin_lock_irqsave(&dev->event_lock, flags);
 	if (vc4_crtc->event &&
-	    (vc4_state->mm.start == HVS_READ(SCALER_DISPLACTX(chan)) ||
+	    (vc4_crtc->current_dlist == HVS_READ(SCALER_DISPLACTX(chan)) ||
 	     vc4_state->feed_txp)) {
 		drm_crtc_send_vblank_event(crtc, vc4_crtc->event);
 		vc4_crtc->event = NULL;
@@ -895,6 +899,7 @@ static const struct drm_crtc_funcs vc4_crtc_funcs = {
 
 static const struct drm_crtc_helper_funcs vc4_crtc_helper_funcs = {
 	.mode_valid = vc4_crtc_mode_valid,
+	.atomic_begin = vc4_hvs_atomic_begin,
 	.atomic_check = vc4_crtc_atomic_check,
 	.atomic_flush = vc4_hvs_atomic_flush,
 	.atomic_enable = vc4_crtc_atomic_enable,
