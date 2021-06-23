@@ -14,6 +14,7 @@
 
 	vc4: gpu {
 		compatible = "brcm,bcm2711-vc5";
+		raspberrypi,firmware = <&firmware>;
 		status = "disabled";
 	};
 
