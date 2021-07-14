@@ -171,8 +171,6 @@ struct vc4_vec {
 
 	struct clk *clock;
 
-	const struct vc4_vec_tv_mode *tv_mode;
-
 	struct debugfs_regset32 regset;
 };
 
@@ -316,7 +314,6 @@ static int vc4_vec_connector_init(struct drm_device *dev, struct vc4_vec *vec)
 	drm_object_attach_property(&connector->base,
 				   dev->mode_config.tv_mode_property,
 				   VC4_VEC_TV_MODE_NTSC);
-	vec->tv_mode = &vc4_vec_tv_modes[VC4_VEC_TV_MODE_NTSC];
 
 	drm_connector_attach_encoder(connector, &vec->encoder.base);
 
@@ -360,6 +357,11 @@ static void vc4_vec_encoder_enable(struct drm_encoder *encoder,
 {
 	struct drm_device *drm = encoder->dev;
 	struct vc4_vec *vec = encoder_to_vc4_vec(encoder);
+	struct drm_connector *connector = &vec->connector;
+	struct drm_connector_state *conn_state =
+		drm_atomic_get_new_connector_state(state, connector);
+	const struct vc4_vec_tv_mode *tv_mode =
+		&vc4_vec_tv_modes[conn_state->tv.mode];
 	int idx, ret;
 
 	if (!drm_dev_enter(drm, &idx))
@@ -418,15 +420,14 @@ static void vc4_vec_encoder_enable(struct drm_encoder *encoder,
 	/* Mask all interrupts. */
 	VEC_WRITE(VEC_MASK0, 0);
 
-	VEC_WRITE(VEC_CONFIG0, vec->tv_mode->config0);
-	VEC_WRITE(VEC_CONFIG1, vec->tv_mode->config1);
+	VEC_WRITE(VEC_CONFIG0, tv_mode->config0);
+	VEC_WRITE(VEC_CONFIG1, tv_mode->config1);
 
-	if (vec->tv_mode->custom_freq != 0) {
+	if (tv_mode->custom_freq != 0) {
 		VEC_WRITE(VEC_FREQ3_2,
-			  (vec->tv_mode->custom_freq >> 16) &
-			  0xffff);
+			  (tv_mode->custom_freq >> 16) & 0xffff);
 		VEC_WRITE(VEC_FREQ1_0,
-			  vec->tv_mode->custom_freq & 0xffff);
+			  tv_mode->custom_freq & 0xffff);
 	}
 
 	VEC_WRITE(VEC_DAC_MISC,
@@ -440,15 +441,6 @@ err_put_runtime_pm:
 	pm_runtime_put(&vec->pdev->dev);
 err_dev_exit:
 	drm_dev_exit(idx);
-}
-
-static void vc4_vec_encoder_atomic_mode_set(struct drm_encoder *encoder,
-					struct drm_crtc_state *crtc_state,
-					struct drm_connector_state *conn_state)
-{
-	struct vc4_vec *vec = encoder_to_vc4_vec(encoder);
-
-	vec->tv_mode = &vc4_vec_tv_modes[conn_state->tv.mode];
 }
 
 static int vc4_vec_encoder_atomic_check(struct drm_encoder *encoder,
@@ -470,7 +462,6 @@ static const struct drm_encoder_helper_funcs vc4_vec_encoder_helper_funcs = {
 	.atomic_check = vc4_vec_encoder_atomic_check,
 	.atomic_disable = vc4_vec_encoder_disable,
 	.atomic_enable = vc4_vec_encoder_enable,
-	.atomic_mode_set = vc4_vec_encoder_atomic_mode_set,
 };
 
 static int vc4_vec_late_register(struct drm_encoder *encoder)
