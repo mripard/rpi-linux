@@ -702,12 +702,13 @@ static int ti_sn_attach_host(struct ti_sn65dsi86 *pdata)
 	if (!(val & DPPLL_CLK_SRC_DSICLK))
 		dsi->mode_flags |= MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
+	pdata->dsi = dsi;
+
 	ret = devm_mipi_dsi_attach(dev, dsi);
 	if (ret < 0) {
 		DRM_ERROR("failed to attach dsi to host\n");
 		return ret;
 	}
-	pdata->dsi = dsi;
 
 	return 0;
 }
