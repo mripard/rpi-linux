@@ -28,6 +28,8 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 
+#include <drm/drm_connector.h>
+
 struct backlight_device;
 struct dentry;
 struct device_node;
@@ -181,6 +183,14 @@ struct drm_panel {
 	 * correct connector type.
 	 */
 	int connector_type;
+
+	/**
+	 * @orientation:
+	 *
+	 * Panel orientation at initialisation. This is used to initialise the
+	 * drm_connector property for panel orientation.
+	 */
+	enum drm_panel_orientation orientation;
 
 	/**
 	 * @list:
