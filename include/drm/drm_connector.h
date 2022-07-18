@@ -143,6 +143,32 @@ enum subpixel_order {
 
 };
 
+#define DRM_MODE_TV_NORM_NTSC_443	(1 << 0)
+#define DRM_MODE_TV_NORM_NTSC_J		(1 << 1)
+#define DRM_MODE_TV_NORM_NTSC_M		(1 << 2)
+#define DRM_MODE_TV_NORM_PAL_60		(1 << 3)
+#define DRM_MODE_TV_NORM_PAL_B		(1 << 4)
+#define DRM_MODE_TV_NORM_PAL_D		(1 << 5)
+#define DRM_MODE_TV_NORM_PAL_G		(1 << 6)
+#define DRM_MODE_TV_NORM_PAL_H		(1 << 7)
+#define DRM_MODE_TV_NORM_PAL_I		(1 << 8)
+#define DRM_MODE_TV_NORM_PAL_M		(1 << 9)
+#define DRM_MODE_TV_NORM_PAL_N		(1 << 10)
+#define DRM_MODE_TV_NORM_PAL_NC		(1 << 11)
+#define DRM_MODE_TV_NORM_SECAM_60	(1 << 12)
+#define DRM_MODE_TV_NORM_SECAM_B	(1 << 13)
+#define DRM_MODE_TV_NORM_SECAM_D	(1 << 14)
+#define DRM_MODE_TV_NORM_SECAM_G	(1 << 15)
+#define DRM_MODE_TV_NORM_SECAM_K	(1 << 16)
+#define DRM_MODE_TV_NORM_SECAM_K1	(1 << 17)
+#define DRM_MODE_TV_NORM_SECAM_L	(1 << 18)
+#define DRM_MODE_TV_NORM_HD480I		(1 << 19)
+#define DRM_MODE_TV_NORM_HD480P		(1 << 20)
+#define DRM_MODE_TV_NORM_HD576I		(1 << 21)
+#define DRM_MODE_TV_NORM_HD576P		(1 << 22)
+#define DRM_MODE_TV_NORM_HD720P		(1 << 23)
+#define DRM_MODE_TV_NORM_HD1080I	(1 << 24)
+
 /**
  * struct drm_scrambling: sink's scrambling support.
  */
@@ -687,6 +713,7 @@ struct drm_tv_connector_state {
 	enum drm_mode_subconnector subconnector;
 	struct drm_connector_tv_margins margins;
 	unsigned int mode;
+	unsigned int norm;
 	unsigned int brightness;
 	unsigned int contrast;
 	unsigned int flicker_reduction;
@@ -1779,6 +1806,7 @@ void drm_connector_attach_dp_subconnector_property(struct drm_connector *connect
 
 int drm_mode_create_tv_margin_properties(struct drm_device *dev);
 int drm_mode_create_tv_properties(struct drm_device *dev,
+				  unsigned int supported_tv_norms,
 				  unsigned int num_modes,
 				  const char * const modes[]);
 void drm_connector_attach_tv_margin_properties(struct drm_connector *conn);
