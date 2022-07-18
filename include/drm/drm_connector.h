@@ -671,7 +671,7 @@ struct drm_connector_tv_margins {
 
 /**
  * struct drm_tv_connector_state - TV connector related states
- * @subconnector: selected subconnector
+ * @select_subconnector: selected subconnector
  * @margins: TV margins
  * @mode: TV mode
  * @brightness: brightness in percent
