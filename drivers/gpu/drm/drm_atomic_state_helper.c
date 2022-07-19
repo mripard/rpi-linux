@@ -490,6 +490,7 @@ EXPORT_SYMBOL(drm_atomic_helper_connector_tv_margins_reset);
 void drm_atomic_helper_connector_tv_reset(struct drm_connector *connector)
 {
 	struct drm_device *dev = connector->dev;
+	struct drm_cmdline_mode *cmdline = &connector->cmdline_mode;
 	struct drm_connector_state *state = connector->state;
 	struct drm_property *prop;
 	uint64_t val;
@@ -499,6 +500,9 @@ void drm_atomic_helper_connector_tv_reset(struct drm_connector *connector)
 		if (!drm_object_property_get_default_value(&connector->base,
 							   prop, &val))
 			state->tv.norm = val;
+
+	if (cmdline->tv_mode)
+		state->tv.norm = cmdline->tv_mode;
 
 	prop = dev->mode_config.tv_select_subconnector_property;
 	if (prop)

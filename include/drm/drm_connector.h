@@ -1305,6 +1305,11 @@ struct drm_cmdline_mode {
 	 * @tv_margins: TV margins to apply to the mode.
 	 */
 	struct drm_connector_tv_margins tv_margins;
+
+	/**
+	 * @tv_mode: TV mode standard. See DRM_MODE_TV_NORM_*.
+	 */
+	unsigned int tv_mode;
 };
 
 /**

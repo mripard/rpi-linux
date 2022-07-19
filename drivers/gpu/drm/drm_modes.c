@@ -1677,6 +1677,80 @@ static int drm_mode_parse_panel_orientation(const char *delim,
 	return 0;
 }
 
+#define TV_OPTION_EQUAL(value, len, option) \
+	((strlen(option) == len) && !strncmp(value, option, len))
+
+static int drm_mode_parse_tv_mode(const char *delim,
+				  struct drm_cmdline_mode *mode)
+{
+	const char *value;
+	unsigned int len;
+
+	if (*delim != '=')
+		return -EINVAL;
+
+	value = delim + 1;
+	delim = strchr(value, ',');
+	if (!delim)
+		delim = value + strlen(value);
+
+	len = delim - value;
+	if (TV_OPTION_EQUAL(value, len, "NTSC-443"))
+		mode->tv_mode = DRM_MODE_TV_NORM_NTSC_443;
+	else if (TV_OPTION_EQUAL(value, len, "NTSC-J"))
+		mode->tv_mode = DRM_MODE_TV_NORM_NTSC_J;
+	else if (TV_OPTION_EQUAL(value, len, "NTSC-M"))
+		mode->tv_mode = DRM_MODE_TV_NORM_NTSC_M;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-60"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_60;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-B"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_B;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-D"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_D;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-G"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_G;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-H"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_H;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-I"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_I;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-M"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_M;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-N"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_N;
+	else if (TV_OPTION_EQUAL(value, len, "PAL-NC"))
+		mode->tv_mode = DRM_MODE_TV_NORM_PAL_NC;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-60"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_60;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-B"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_B;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-D"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_D;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-G"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_G;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-K"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_K;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-K1"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_K1;
+	else if (TV_OPTION_EQUAL(value, len, "SECAM-L"))
+		mode->tv_mode = DRM_MODE_TV_NORM_SECAM_L;
+	else if (TV_OPTION_EQUAL(value, len, "HD480I"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD480I;
+	else if (TV_OPTION_EQUAL(value, len, "HD480P"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD480P;
+	else if (TV_OPTION_EQUAL(value, len, "HD576I"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD576I;
+	else if (TV_OPTION_EQUAL(value, len, "HD576P"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD576P;
+	else if (TV_OPTION_EQUAL(value, len, "HD720P"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD720P;
+	else if (TV_OPTION_EQUAL(value, len, "HD1080I"))
+		mode->tv_mode = DRM_MODE_TV_NORM_HD1080I;
+	else
+		return -EINVAL;
+
+	return 0;
+}
+
 static int drm_mode_parse_cmdline_options(const char *str,
 					  bool freestanding,
 					  const struct drm_connector *connector,
@@ -1746,6 +1820,9 @@ static int drm_mode_parse_cmdline_options(const char *str,
 		} else if (!strncmp(option, "panel_orientation", delim - option)) {
 			if (drm_mode_parse_panel_orientation(delim, mode))
 				return -EINVAL;
+		} else if (!strncmp(option, "tv_mode", delim - option)) {
+			if (drm_mode_parse_tv_mode(delim, mode))
+				return -EINVAL;
 		} else {
 			return -EINVAL;
 		}
@@ -1771,11 +1848,12 @@ static int drm_mode_parse_cmdline_options(const char *str,
 struct drm_named_mode {
 	const char *name;
 	const struct drm_display_mode *mode;
+	unsigned int tv_mode;
 };
 
 static const struct drm_named_mode drm_named_modes[] = {
-	{ "NTSC", &drm_mode_480i, },
-	{ "PAL", &drm_mode_576i, },
+	{ "NTSC", &drm_mode_480i, DRM_MODE_TV_NORM_NTSC_M, },
+	{ "PAL", &drm_mode_576i, DRM_MODE_TV_NORM_PAL_B, },
 };
 
 static bool drm_mode_parse_cmdline_named_mode(const char *name,
@@ -1796,6 +1874,7 @@ static bool drm_mode_parse_cmdline_named_mode(const char *name,
 		cmdline_mode->xres = mode->mode->hdisplay;
 		cmdline_mode->yres = mode->mode->vdisplay;
 		cmdline_mode->interlace = !!(mode->mode->flags & DRM_MODE_FLAG_INTERLACE);
+		cmdline_mode->tv_mode = mode->tv_mode;
 		cmdline_mode->specified = true;
 
 		return true;
