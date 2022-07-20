@@ -1770,11 +1770,12 @@ static int drm_mode_parse_cmdline_options(const char *str,
 
 struct drm_named_mode {
 	const char *name;
+	const struct drm_display_mode *mode;
 };
 
 static const struct drm_named_mode drm_named_modes[] = {
-	{ "NTSC", },
-	{ "PAL", },
+	{ "NTSC", &drm_mode_480i, },
+	{ "PAL", &drm_mode_576i, },
 };
 
 static bool drm_mode_parse_cmdline_named_mode(const char *name,
@@ -1792,6 +1793,9 @@ static bool drm_mode_parse_cmdline_named_mode(const char *name,
 			continue;
 
 		strcpy(cmdline_mode->name, mode->name);
+		cmdline_mode->xres = mode->mode->hdisplay;
+		cmdline_mode->yres = mode->mode->vdisplay;
+		cmdline_mode->interlace = !!(mode->mode->flags & DRM_MODE_FLAG_INTERLACE);
 		cmdline_mode->specified = true;
 
 		return true;
