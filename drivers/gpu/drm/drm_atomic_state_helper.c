@@ -553,6 +553,93 @@ void drm_atomic_helper_connector_tv_reset(struct drm_connector *connector)
 EXPORT_SYMBOL(drm_atomic_helper_connector_tv_reset);
 
 /**
+ * @drm_atomic_helper_connector_tv_check: Validate an analog TV connector state
+ * @connector: DRM Connector
+ * @state: the DRM State object
+ *
+ * Checks the state object to see if the requested state is valid for an
+ * analog TV connector.
+ *
+ * Returns:
+ * Zero for success, a negative error code on error.
+ */
+int drm_atomic_helper_connector_tv_check(struct drm_connector *connector,
+					 struct drm_atomic_state *state)
+{
+	struct drm_connector_state *old_conn_state =
+		drm_atomic_get_old_connector_state(state, connector);
+	struct drm_connector_state *new_conn_state =
+		drm_atomic_get_new_connector_state(state, connector);
+	const struct drm_display_mode *mode;
+	struct drm_crtc_state *crtc_state;
+	struct drm_crtc *crtc;
+
+	crtc = new_conn_state->crtc;
+	if (!crtc)
+		return 0;
+
+	crtc_state = drm_atomic_get_new_crtc_state(state, crtc);
+	if (!crtc_state)
+		return -EINVAL;
+
+	switch (new_conn_state->tv.norm) {
+	case DRM_MODE_TV_NORM_NTSC_443:
+		fallthrough;
+	case DRM_MODE_TV_NORM_NTSC_J:
+		fallthrough;
+	case DRM_MODE_TV_NORM_NTSC_M:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_M:
+		mode = &drm_mode_480i;
+		break;
+
+	case DRM_MODE_TV_NORM_PAL_60:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_B:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_D:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_G:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_H:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_I:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_N:
+		fallthrough;
+	case DRM_MODE_TV_NORM_PAL_NC:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_60:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_B:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_D:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_G:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_K:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_K1:
+		fallthrough;
+	case DRM_MODE_TV_NORM_SECAM_L:
+		mode = &drm_mode_576i;
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	if (!drm_mode_equal(mode, &crtc_state->mode))
+		return -EINVAL;
+
+	if (old_conn_state->tv.norm != new_conn_state->tv.norm)
+		crtc_state->mode_changed = true;
+
+	return 0;
+}
+EXPORT_SYMBOL(drm_atomic_helper_connector_tv_check);
+
+/**
  * __drm_atomic_helper_connector_duplicate_state - copy atomic connector state
  * @connector: connector object
  * @state: atomic connector state
