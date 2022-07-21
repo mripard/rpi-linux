@@ -172,6 +172,8 @@ struct vc4_vec {
 
 	struct clk *clock;
 
+	struct drm_property *tv_mode_property;
+
 	struct debugfs_regset32 regset;
 };
 
@@ -184,6 +186,12 @@ encoder_to_vc4_vec(struct drm_encoder *encoder)
 	return container_of(encoder, struct vc4_vec, encoder.base);
 }
 
+static inline struct vc4_vec *
+connector_to_vc4_vec(struct drm_connector *connector)
+{
+	return container_of(connector, struct vc4_vec, connector);
+}
+
 enum vc4_vec_tv_mode_id {
 	VC4_VEC_TV_MODE_NTSC,
 	VC4_VEC_TV_MODE_NTSC_J,
@@ -192,7 +200,7 @@ enum vc4_vec_tv_mode_id {
 };
 
 struct vc4_vec_tv_mode {
-	const struct drm_display_mode *mode;
+	unsigned int mode;
 	u32 config0;
 	u32 config1;
 	u32 custom_freq;
@@ -226,26 +234,48 @@ static const struct debugfs_reg32 vec_regs[] = {
 };
 
 static const struct vc4_vec_tv_mode vc4_vec_tv_modes[] = {
-	[VC4_VEC_TV_MODE_NTSC] = {
-		.mode = &drm_mode_480i,
+	{
+		.mode = DRM_MODE_TV_NORM_NTSC_M,
 		.config0 = VEC_CONFIG0_NTSC_STD | VEC_CONFIG0_PDEN,
 		.config1 = VEC_CONFIG1_C_CVBS_CVBS,
 	},
-	[VC4_VEC_TV_MODE_NTSC_J] = {
-		.mode = &drm_mode_480i,
+	{
+		.mode = DRM_MODE_TV_NORM_NTSC_J,
 		.config0 = VEC_CONFIG0_NTSC_STD,
 		.config1 = VEC_CONFIG1_C_CVBS_CVBS,
 	},
-	[VC4_VEC_TV_MODE_PAL] = {
-		.mode = &drm_mode_576i,
+	{
+		.mode = DRM_MODE_TV_NORM_PAL_B,
 		.config0 = VEC_CONFIG0_PAL_BDGHI_STD,
 		.config1 = VEC_CONFIG1_C_CVBS_CVBS,
 	},
-	[VC4_VEC_TV_MODE_PAL_M] = {
-		.mode = &drm_mode_480i,
+	{
+		.mode = DRM_MODE_TV_NORM_PAL_M,
 		.config0 = VEC_CONFIG0_PAL_M_STD,
 		.config1 = VEC_CONFIG1_C_CVBS_CVBS,
 	},
+};
+
+static inline const struct vc4_vec_tv_mode *
+vc4_vec_tv_mode_lookup(unsigned int mode)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(vc4_vec_tv_modes); i++) {
+		const struct vc4_vec_tv_mode *tv_mode = &vc4_vec_tv_modes[i];
+
+		if (tv_mode->mode == mode)
+			return tv_mode;
+	}
+
+	return NULL;
+}
+
+static const struct drm_prop_enum_list tv_mode_names[] = {
+	{ VC4_VEC_TV_MODE_NTSC, "NTSC", },
+	{ VC4_VEC_TV_MODE_NTSC_J, "NTSC-J", },
+	{ VC4_VEC_TV_MODE_PAL, "PAL", },
+	{ VC4_VEC_TV_MODE_PAL_M, "PAL-M", },
 };
 
 static enum drm_connector_status
@@ -262,11 +292,17 @@ void vc4_vec_connector_reset(struct drm_connector *connector)
 
 static int vc4_vec_connector_get_modes(struct drm_connector *connector)
 {
-	struct drm_connector_state *state = connector->state;
 	struct drm_display_mode *mode;
 
-	mode = drm_mode_duplicate(connector->dev,
-				  vc4_vec_tv_modes[state->tv.mode].mode);
+	mode = drm_mode_duplicate(connector->dev, &drm_mode_480i);
+	if (!mode) {
+		DRM_ERROR("Failed to create a new display mode\n");
+		return -ENOMEM;
+	}
+
+	drm_mode_probed_add(connector, mode);
+
+	mode = drm_mode_duplicate(connector->dev, &drm_mode_576i);
 	if (!mode) {
 		DRM_ERROR("Failed to create a new display mode\n");
 		return -ENOMEM;
@@ -277,21 +313,95 @@ static int vc4_vec_connector_get_modes(struct drm_connector *connector)
 	return 1;
 }
 
+static int
+vc4_vec_connector_set_property(struct drm_connector *connector,
+			       struct drm_connector_state *state,
+			       struct drm_property *property,
+			       uint64_t val)
+{
+	struct vc4_vec *vec = connector_to_vc4_vec(connector);
+
+	if (property != vec->tv_mode_property)
+		return -EINVAL;
+
+	switch (val) {
+	case VC4_VEC_TV_MODE_NTSC:
+		state->tv.norm = DRM_MODE_TV_NORM_NTSC_M;
+		break;
+
+	case VC4_VEC_TV_MODE_NTSC_J:
+		state->tv.norm = DRM_MODE_TV_NORM_NTSC_J;
+		break;
+
+	case VC4_VEC_TV_MODE_PAL:
+		state->tv.norm = DRM_MODE_TV_NORM_PAL_B;
+		break;
+
+	case VC4_VEC_TV_MODE_PAL_M:
+		state->tv.norm = DRM_MODE_TV_NORM_PAL_M;
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+vc4_vec_connector_get_property(struct drm_connector *connector,
+			       const struct drm_connector_state *state,
+			       struct drm_property *property,
+			       uint64_t *val)
+{
+	struct vc4_vec *vec = connector_to_vc4_vec(connector);
+
+	if (property != vec->tv_mode_property)
+		return -EINVAL;
+
+	switch (state->tv.norm) {
+	case DRM_MODE_TV_NORM_NTSC_J:
+		*val = VC4_VEC_TV_MODE_NTSC_J;
+		break;
+
+	case DRM_MODE_TV_NORM_NTSC_M:
+		*val = VC4_VEC_TV_MODE_NTSC;
+		break;
+
+	case DRM_MODE_TV_NORM_PAL_B:
+		*val = VC4_VEC_TV_MODE_PAL;
+		break;
+
+	case DRM_MODE_TV_NORM_PAL_M:
+		*val = VC4_VEC_TV_MODE_PAL_M;
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static const struct drm_connector_funcs vc4_vec_connector_funcs = {
 	.detect = vc4_vec_connector_detect,
 	.fill_modes = drm_helper_probe_single_connector_modes,
 	.reset = vc4_vec_connector_reset,
 	.atomic_duplicate_state = drm_atomic_helper_connector_duplicate_state,
 	.atomic_destroy_state = drm_atomic_helper_connector_destroy_state,
+	.atomic_get_property = vc4_vec_connector_get_property,
+	.atomic_set_property = vc4_vec_connector_set_property,
 };
 
 static const struct drm_connector_helper_funcs vc4_vec_connector_helper_funcs = {
+	.atomic_check = drm_atomic_helper_connector_tv_check,
 	.get_modes = vc4_vec_connector_get_modes,
 };
 
 static int vc4_vec_connector_init(struct drm_device *dev, struct vc4_vec *vec)
 {
 	struct drm_connector *connector = &vec->connector;
+	struct drm_property *prop;
 	int ret;
 
 	connector->interlace_allowed = true;
@@ -304,8 +414,16 @@ static int vc4_vec_connector_init(struct drm_device *dev, struct vc4_vec *vec)
 	drm_connector_helper_add(connector, &vc4_vec_connector_helper_funcs);
 
 	drm_object_attach_property(&connector->base,
-				   dev->mode_config.tv_mode_property,
-				   VC4_VEC_TV_MODE_NTSC);
+				   dev->mode_config.tv_norm_property,
+				   DRM_MODE_TV_NORM_NTSC_M);
+
+	prop = drm_property_create_enum(dev, 0, "mode",
+					tv_mode_names, ARRAY_SIZE(tv_mode_names));
+	if (!prop)
+		return -ENOMEM;
+	vec->tv_mode_property = prop;
+
+	drm_object_attach_property(&connector->base, prop, VC4_VEC_TV_MODE_NTSC);
 
 	drm_connector_attach_encoder(connector, &vec->encoder.base);
 
@@ -352,12 +470,15 @@ static void vc4_vec_encoder_enable(struct drm_encoder *encoder,
 	struct drm_connector *connector = &vec->connector;
 	struct drm_connector_state *conn_state =
 		drm_atomic_get_new_connector_state(state, connector);
-	const struct vc4_vec_tv_mode *tv_mode =
-		&vc4_vec_tv_modes[conn_state->tv.mode];
+	const struct vc4_vec_tv_mode *tv_mode;
 	int idx, ret;
 
 	if (!drm_dev_enter(drm, &idx))
 		return;
+
+	tv_mode = vc4_vec_tv_mode_lookup(conn_state->tv.norm);
+	if (!tv_mode)
+		goto err_dev_exit;
 
 	ret = pm_runtime_get_sync(&vec->pdev->dev);
 	if (ret < 0) {
@@ -435,23 +556,7 @@ err_dev_exit:
 	drm_dev_exit(idx);
 }
 
-static int vc4_vec_encoder_atomic_check(struct drm_encoder *encoder,
-					struct drm_crtc_state *crtc_state,
-					struct drm_connector_state *conn_state)
-{
-	const struct vc4_vec_tv_mode *vec_mode;
-
-	vec_mode = &vc4_vec_tv_modes[conn_state->tv.mode];
-
-	if (conn_state->crtc &&
-	    !drm_mode_equal(vec_mode->mode, &crtc_state->adjusted_mode))
-		return -EINVAL;
-
-	return 0;
-}
-
 static const struct drm_encoder_helper_funcs vc4_vec_encoder_helper_funcs = {
-	.atomic_check = vc4_vec_encoder_atomic_check,
 	.atomic_disable = vc4_vec_encoder_disable,
 	.atomic_enable = vc4_vec_encoder_enable,
 };
@@ -492,13 +597,6 @@ static const struct of_device_id vc4_vec_dt_match[] = {
 	{ /* sentinel */ },
 };
 
-static const char * const tv_mode_names[] = {
-	[VC4_VEC_TV_MODE_NTSC] = "NTSC",
-	[VC4_VEC_TV_MODE_NTSC_J] = "NTSC-J",
-	[VC4_VEC_TV_MODE_PAL] = "PAL",
-	[VC4_VEC_TV_MODE_PAL_M] = "PAL-M",
-};
-
 static int vc4_vec_bind(struct device *dev, struct device *master, void *data)
 {
 	struct platform_device *pdev = to_platform_device(dev);
@@ -507,9 +605,11 @@ static int vc4_vec_bind(struct device *dev, struct device *master, void *data)
 	int ret;
 
 	ret = drm_mode_create_tv_properties(drm,
-					    0,
-					    ARRAY_SIZE(tv_mode_names),
-					    tv_mode_names);
+					    DRM_MODE_TV_NORM_NTSC_J |
+					    DRM_MODE_TV_NORM_NTSC_M |
+					    DRM_MODE_TV_NORM_PAL_B |
+					    DRM_MODE_TV_NORM_PAL_M,
+					    0, NULL);
 	if (ret)
 		return ret;
 
