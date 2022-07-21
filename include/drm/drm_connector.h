@@ -712,7 +712,6 @@ struct drm_tv_connector_state {
 	enum drm_mode_subconnector select_subconnector;
 	enum drm_mode_subconnector subconnector;
 	struct drm_connector_tv_margins margins;
-	unsigned int mode;
 	unsigned int norm;
 	unsigned int brightness;
 	unsigned int contrast;
@@ -1806,9 +1805,7 @@ void drm_connector_attach_dp_subconnector_property(struct drm_connector *connect
 
 int drm_mode_create_tv_margin_properties(struct drm_device *dev);
 int drm_mode_create_tv_properties(struct drm_device *dev,
-				  unsigned int supported_tv_norms,
-				  unsigned int num_modes,
-				  const char * const modes[]);
+				  unsigned int supported_tv_norms);
 void drm_connector_attach_tv_margin_properties(struct drm_connector *conn);
 int drm_mode_create_scaling_mode_property(struct drm_device *dev);
 int drm_connector_attach_content_type_property(struct drm_connector *dev);

@@ -526,8 +526,7 @@ static int sun4i_tv_bind(struct device *dev, struct device *master,
 
 	ret = drm_mode_create_tv_properties(drm,
 					    DRM_MODE_TV_NORM_NTSC_M |
-					    DRM_MODE_TV_NORM_PAL_B,
-					    0, NULL);
+					    DRM_MODE_TV_NORM_PAL_B);
 	if (ret)
 		goto err_cleanup_connector;
 

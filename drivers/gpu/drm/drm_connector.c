@@ -1650,9 +1650,7 @@ EXPORT_SYMBOL(drm_mode_create_tv_margin_properties);
  * 0 on success or a negative error code on failure.
  */
 int drm_mode_create_tv_properties(struct drm_device *dev,
-				  unsigned int supported_tv_norms,
-				  unsigned int num_modes,
-				  const char * const modes[])
+				  unsigned int supported_tv_norms)
 {
 	static const struct drm_prop_enum_list tv_norm_values[] = {
 		{ __builtin_ffs(DRM_MODE_TV_NORM_NTSC_443) - 1, "NTSC-443" },
@@ -1721,20 +1719,6 @@ int drm_mode_create_tv_properties(struct drm_device *dev,
 	if (!tv_norm)
 		goto nomem;
 	dev->mode_config.tv_norm_property = tv_norm;
-
-	if (num_modes) {
-		unsigned int i;
-
-		dev->mode_config.tv_mode_property =
-			drm_property_create(dev, DRM_MODE_PROP_ENUM,
-					    "mode", num_modes);
-		if (!dev->mode_config.tv_mode_property)
-			goto nomem;
-
-		for (i = 0; i < num_modes; i++)
-			drm_property_add_enum(dev->mode_config.tv_mode_property,
-					      i, modes[i]);
-	}
 
 	dev->mode_config.tv_brightness_property =
 		drm_property_create_range(dev, 0, "brightness", 0, 100);

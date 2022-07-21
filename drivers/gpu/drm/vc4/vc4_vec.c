@@ -704,8 +704,7 @@ static int vc4_vec_bind(struct device *dev, struct device *master, void *data)
 					    DRM_MODE_TV_NORM_PAL_B |
 					    DRM_MODE_TV_NORM_PAL_M |
 					    DRM_MODE_TV_NORM_PAL_N |
-					    DRM_MODE_TV_NORM_SECAM_B,
-					    0, NULL);
+					    DRM_MODE_TV_NORM_SECAM_B);
 	if (ret)
 		return ret;
 
