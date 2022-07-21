@@ -1684,7 +1684,6 @@ int drm_mode_create_tv_properties(struct drm_device *dev,
 	struct drm_property *tv_selector;
 	struct drm_property *tv_subconnector;
 	struct drm_property *tv_norm;
-	unsigned int i;
 
 	if (dev->mode_config.tv_select_subconnector_property)
 		return 0;
@@ -1723,15 +1722,19 @@ int drm_mode_create_tv_properties(struct drm_device *dev,
 		goto nomem;
 	dev->mode_config.tv_norm_property = tv_norm;
 
-	dev->mode_config.tv_mode_property =
-		drm_property_create(dev, DRM_MODE_PROP_ENUM,
-				    "mode", num_modes);
-	if (!dev->mode_config.tv_mode_property)
-		goto nomem;
+	if (num_modes) {
+		unsigned int i;
 
-	for (i = 0; i < num_modes; i++)
-		drm_property_add_enum(dev->mode_config.tv_mode_property,
-				      i, modes[i]);
+		dev->mode_config.tv_mode_property =
+			drm_property_create(dev, DRM_MODE_PROP_ENUM,
+					    "mode", num_modes);
+		if (!dev->mode_config.tv_mode_property)
+			goto nomem;
+
+		for (i = 0; i < num_modes; i++)
+			drm_property_add_enum(dev->mode_config.tv_mode_property,
+					      i, modes[i]);
+	}
 
 	dev->mode_config.tv_brightness_property =
 		drm_property_create_range(dev, 0, "brightness", 0, 100);
