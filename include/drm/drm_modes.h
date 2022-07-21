@@ -394,6 +394,9 @@ struct drm_display_mode {
 
 };
 
+extern const struct drm_display_mode drm_mode_480i;
+extern const struct drm_display_mode drm_mode_576i;
+
 /**
  * DRM_MODE_FMT - printf string for &struct drm_display_mode
  */

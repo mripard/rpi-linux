@@ -16,7 +16,7 @@
 
 struct meson_cvbs_mode {
 	struct meson_cvbs_enci_mode *enci;
-	struct drm_display_mode mode;
+	const struct drm_display_mode *mode;
 };
 
 #define MESON_CVBS_MODES_COUNT	2

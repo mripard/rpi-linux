@@ -48,6 +48,24 @@
 
 #include "drm_crtc_internal.h"
 
+const struct drm_display_mode drm_mode_480i = {
+	DRM_MODE("720x480i", DRM_MODE_TYPE_DRIVER, 13500,
+		 720, 739, 801, 858, 0,
+		 480, 488, 494, 525, 0,
+		 DRM_MODE_FLAG_INTERLACE),
+	.picture_aspect_ratio = HDMI_PICTURE_ASPECT_4_3,
+};
+EXPORT_SYMBOL_GPL(drm_mode_480i);
+
+const struct drm_display_mode drm_mode_576i = {
+	DRM_MODE("720x576i", DRM_MODE_TYPE_DRIVER, 13500,
+		 720, 732, 795, 864, 0,
+		 576, 580, 586, 625, 0,
+		 DRM_MODE_FLAG_INTERLACE),
+	.picture_aspect_ratio = HDMI_PICTURE_ASPECT_4_3,
+};
+EXPORT_SYMBOL_GPL(drm_mode_576i);
+
 /**
  * drm_mode_debug_printmodeline - print a mode to dmesg
  * @mode: mode to print

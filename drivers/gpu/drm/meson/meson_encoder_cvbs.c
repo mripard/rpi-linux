@@ -45,21 +45,11 @@ struct meson_encoder_cvbs {
 struct meson_cvbs_mode meson_cvbs_modes[MESON_CVBS_MODES_COUNT] = {
 	{ /* PAL */
 		.enci = &meson_cvbs_enci_pal,
-		.mode = {
-			DRM_MODE("720x576i", DRM_MODE_TYPE_DRIVER, 13500,
-				 720, 732, 795, 864, 0, 576, 580, 586, 625, 0,
-				 DRM_MODE_FLAG_INTERLACE),
-			.picture_aspect_ratio = HDMI_PICTURE_ASPECT_4_3,
-		},
+		.mode = &drm_mode_576i,
 	},
 	{ /* NTSC */
 		.enci = &meson_cvbs_enci_ntsc,
-		.mode = {
-			DRM_MODE("720x480i", DRM_MODE_TYPE_DRIVER, 13500,
-				720, 739, 801, 858, 0, 480, 488, 494, 525, 0,
-				DRM_MODE_FLAG_INTERLACE),
-			.picture_aspect_ratio = HDMI_PICTURE_ASPECT_4_3,
-		},
+		.mode = &drm_mode_480i,
 	},
 };
 
@@ -71,7 +61,7 @@ meson_cvbs_get_mode(const struct drm_display_mode *req_mode)
 	for (i = 0; i < MESON_CVBS_MODES_COUNT; ++i) {
 		struct meson_cvbs_mode *meson_mode = &meson_cvbs_modes[i];
 
-		if (drm_mode_match(req_mode, &meson_mode->mode,
+		if (drm_mode_match(req_mode, meson_mode->mode,
 				   DRM_MODE_MATCH_TIMINGS |
 				   DRM_MODE_MATCH_CLOCK |
 				   DRM_MODE_MATCH_FLAGS |
@@ -104,7 +94,7 @@ static int meson_encoder_cvbs_get_modes(struct drm_bridge *bridge,
 	for (i = 0; i < MESON_CVBS_MODES_COUNT; ++i) {
 		struct meson_cvbs_mode *meson_mode = &meson_cvbs_modes[i];
 
-		mode = drm_mode_duplicate(priv->drm, &meson_mode->mode);
+		mode = drm_mode_duplicate(priv->drm, meson_mode->mode);
 		if (!mode) {
 			dev_err(priv->dev, "Failed to create a new display mode\n");
 			return 0;
