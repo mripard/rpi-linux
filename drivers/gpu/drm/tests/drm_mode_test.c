@@ -156,6 +156,32 @@ static void drm_mode_named_ntsc(struct kunit *test)
 	KUNIT_EXPECT_TRUE(test, drm_mode_equal(&drm_mode_480i, mode));
 }
 
+static void drm_mode_named_ntsc_j(struct kunit *test)
+{
+	struct drm_mode_test_priv *priv = test->priv;
+	struct drm_device *drm = priv->drm;
+	struct drm_connector *connector = &priv->connector;
+	struct drm_cmdline_mode *cmdline_mode = &connector->cmdline_mode;
+	struct drm_display_mode *mode;
+	const char *cmdline = "NTSC_J";
+	int ret;
+
+	KUNIT_ASSERT_TRUE(test,
+			  drm_mode_parse_command_line_for_connector(cmdline,
+								    connector,
+								    cmdline_mode));
+
+	mutex_lock(&drm->mode_config.mutex);
+	ret = drm_helper_probe_single_connector_modes(connector, 1920, 1080);
+	mutex_unlock(&drm->mode_config.mutex);
+	KUNIT_ASSERT_GT(test, ret, 0);
+
+	mode = drm_connector_pick_cmdline_mode(connector);
+	KUNIT_ASSERT_PTR_NE(test, mode, NULL);
+
+	KUNIT_EXPECT_TRUE(test, drm_mode_equal(&drm_mode_480i, mode));
+}
+
 static void drm_mode_named_pal(struct kunit *test)
 {
 	struct drm_mode_test_priv *priv = test->priv;
@@ -182,10 +208,38 @@ static void drm_mode_named_pal(struct kunit *test)
 	KUNIT_EXPECT_TRUE(test, drm_mode_equal(&drm_mode_576i, mode));
 }
 
+static void drm_mode_named_pal_m(struct kunit *test)
+{
+	struct drm_mode_test_priv *priv = test->priv;
+	struct drm_device *drm = priv->drm;
+	struct drm_connector *connector = &priv->connector;
+	struct drm_cmdline_mode *cmdline_mode = &connector->cmdline_mode;
+	struct drm_display_mode *mode;
+	const char *cmdline = "PAL_M";
+	int ret;
+
+	KUNIT_ASSERT_TRUE(test,
+			  drm_mode_parse_command_line_for_connector(cmdline,
+								    connector,
+								    cmdline_mode));
+
+	mutex_lock(&drm->mode_config.mutex);
+	ret = drm_helper_probe_single_connector_modes(connector, 1920, 1080);
+	mutex_unlock(&drm->mode_config.mutex);
+	KUNIT_ASSERT_GT(test, ret, 0);
+
+	mode = drm_connector_pick_cmdline_mode(connector);
+	KUNIT_ASSERT_PTR_NE(test, mode, NULL);
+
+	KUNIT_EXPECT_TRUE(test, drm_mode_equal(&drm_mode_480i, mode));
+}
+
 static struct kunit_case drm_mode_tests[] = {
 	KUNIT_CASE(drm_mode_res_1920_1080_60),
 	KUNIT_CASE(drm_mode_named_ntsc),
+	KUNIT_CASE(drm_mode_named_ntsc_j),
 	KUNIT_CASE(drm_mode_named_pal),
+	KUNIT_CASE(drm_mode_named_pal_m),
 	{}
 };
 

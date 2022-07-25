@@ -1853,7 +1853,9 @@ struct drm_named_mode {
 
 static const struct drm_named_mode drm_named_modes[] = {
 	{ "NTSC", &drm_mode_480i, DRM_MODE_TV_NORM_NTSC_M, },
+	{ "NTSC_J", &drm_mode_480i, DRM_MODE_TV_NORM_NTSC_J, },
 	{ "PAL", &drm_mode_576i, DRM_MODE_TV_NORM_PAL_B, },
+	{ "PAL_M", &drm_mode_480i, DRM_MODE_TV_NORM_PAL_M, },
 };
 
 static bool drm_mode_parse_cmdline_named_mode(const char *name,
