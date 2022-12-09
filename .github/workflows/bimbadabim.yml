@@ -8,12 +8,12 @@ on:
     branches: [ "rpi-*"]
 
 env:
-  NUM_JOBS: 3
+  NUM_JOBS: 40
 
 jobs:
   build-arm64:
     name: Kernel Build for ARM64
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       ARTIFACTS_DIR: build-artifacts
       MOD_TMP_DIR: build-modules
