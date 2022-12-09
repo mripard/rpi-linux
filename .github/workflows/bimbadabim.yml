@@ -19,8 +19,6 @@ jobs:
       CROSS_COMPILE: aarch64-linux-gnu-
       ARTIFACTS_DIR: build-artifacts
       MOD_TMP_DIR: build-modules
-      INSTALL_MOD_PATH: {{ env.MOD_TMP_DIR }}
-      INSTALL_DTBS_PATH: {{ env.ARTIFACTS_DIR }}
 
     steps:
       - uses: actions/checkout@v3
@@ -42,12 +40,12 @@ jobs:
       - name: Package the Device Trees
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          make install_dtbs
+          make INSTALL_DTBS_PATH={{ env.ARTIFACTS_DIR }} install_dtbs
 
       - name: Copy the Modules
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          make modules_install
+          make INSTALL_MOD_PATH={{ env.MOD_TMP_DIR }} modules_install
 
       - name: Create the Modules Initramfs
         run: |
