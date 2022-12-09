@@ -51,7 +51,7 @@ jobs:
           pushd ${{ env.MOD_TMP_DIR }}
           find . -print0 | \
                 cpio --null --create --verbose --format=newc \
-                > ${{ env.ARTIFACTS_DIR }}/modules.cpio
+                > ../modules.cpio
           popd
 
       - name: Create the Artifacts Archive
