@@ -61,4 +61,4 @@ jobs:
       - name: Upload the Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          path: {{ env.ARTIFACTS_ARCHIVE }}
+          path: ${{ env.ARTIFACTS_ARCHIVE }}
