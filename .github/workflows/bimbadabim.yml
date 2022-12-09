@@ -56,7 +56,7 @@ jobs:
 
       - name: Create the Artifacts Archive
         run: |
-          tar -cJvf ${{ env.ARTIFACTS_ARCHIVE }} -C ${{ env.ARTIFACTS_DIR }}/build .
+          tar -cJvf ${{ env.ARTIFACTS_ARCHIVE }} -C ${{ env.ARTIFACTS_DIR }} .
 
       - name: Upload the Build Artifacts
         uses: actions/upload-artifact@v3
