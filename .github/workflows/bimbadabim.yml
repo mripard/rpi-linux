@@ -15,9 +15,8 @@ jobs:
     name: Kernel Build for ARM64
     runs-on: [self-hosted, linux, x64]
     env:
-      ARTIFACTS_ARCHIVE: build-artifacts-arm64-bcm2711.tar.xz
-      ARTIFACTS_DIR: build-artifacts
-      MOD_TMP_DIR: build-modules
+      ARTIFACTS_DIR: ${{ github.workspace }}/build-artifacts
+      MOD_TMP_DIR: ${{ github.workspace }}/build-modules
 
     steps:
       - uses: actions/checkout@v3
@@ -43,7 +42,7 @@ jobs:
 
       - name: Copy the Modules
         run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          mkdir -p ${{ env.MOD_TMP_DIR }}
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=${{ env.MOD_TMP_DIR }} -j ${{ env.NUM_JOBS }} modules_install
 
       - name: Create the Modules Initramfs
@@ -51,14 +50,11 @@ jobs:
           pushd ${{ env.MOD_TMP_DIR }}
           find . -print0 | \
                 cpio --null --create --verbose --format=newc \
-                > ../modules.cpio
+                > ${{ env.ARTIFACTS_DIR }}/modules.cpio
           popd
-
-      - name: Create the Artifacts Archive
-        run: |
-          tar -cJvf ${{ env.ARTIFACTS_ARCHIVE }} -C ${{ env.ARTIFACTS_DIR }} .
 
       - name: Upload the Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          path: ${{ env.ARTIFACTS_ARCHIVE }}
+          name: kernel-build-arm64-bcm2711
+          path: ${{ env.ARTIFACTS_DIR }}
