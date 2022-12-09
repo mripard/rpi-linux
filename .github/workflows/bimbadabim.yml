@@ -1,0 +1,58 @@
+name: HDMI Build Testing
+
+on:
+  pull_request:
+    branches: [ "rpi-*"]
+
+  push:
+    branches: [ "rpi-*"]
+
+env:
+  NUM_JOBS: 3
+
+jobs:
+  build-arm64:
+    name: Kernel Build for ARM64
+    runs-on: ubuntu-latest
+    env:
+      ARCH: arm64
+      CROSS_COMPILE: aarch64-linux-gnu-
+      ARTIFACTS_DIR: build-artifacts
+      MOD_TMP_DIR: build-modules
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build Kernel, Modules and Device Trees
+        run: |
+          make -j {{ env.NUM_JOBS }} bcm2711_defconfig Image.gz modules dtbs
+
+      - name: Copy the Kernel Image
+        run: |
+          mkdir -p {{ env.ARTIFACTS_DIR }}
+          cp arch/arm64/boot/Image.gz {{ env.ARTIFACTS_DIR }}
+
+      - name: Package the Device Trees
+        env:
+          INSTALL_DTBS_PATH: {{ env.ARTIFACTS_DIR }}
+        run: |
+          mkdir -p {{ env.ARTIFACTS_DIR }}
+          make install_dtbs
+
+      - name: Copy the Modules
+        env:
+          INSTALL_MOD_PATH: {{ env.MOD_TMP_DIR }}
+        run: |
+          mkdir -p {{ env.ARTIFACTS_DIR }}
+          make modules_install
+
+      - name: Create the Modules Initramfs
+        run: |
+          find {{ env.MOD_TMP_DIR }} -print0 | \
+          	cpio --null --create --verbose --format=newc \
+                > {{ env.ARTIFACTS_DIR }}/modules.cpio
