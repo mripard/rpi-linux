@@ -13,7 +13,7 @@ env:
 jobs:
   build-arm64:
     name: Kernel Build for ARM64
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     env:
       ARTIFACTS_DIR: build-artifacts
       MOD_TMP_DIR: build-modules
