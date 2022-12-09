@@ -15,8 +15,6 @@ jobs:
     name: Kernel Build for ARM64
     runs-on: ubuntu-latest
     env:
-      ARCH: arm64
-      CROSS_COMPILE: aarch64-linux-gnu-
       ARTIFACTS_DIR: build-artifacts
       MOD_TMP_DIR: build-modules
 
@@ -30,7 +28,9 @@ jobs:
 
       - name: Build Kernel, Modules and Device Trees
         run: |
-          make -j {{ env.NUM_JOBS }} bcm2711_defconfig Image.gz modules dtbs
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+                -j {{ env.NUM_JOBS }} \
+                bcm2711_defconfig Image.gz modules dtbs
 
       - name: Copy the Kernel Image
         run: |
@@ -40,15 +40,17 @@ jobs:
       - name: Package the Device Trees
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          make INSTALL_DTBS_PATH={{ env.ARTIFACTS_DIR }} install_dtbs
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+                INSTALL_DTBS_PATH={{ env.ARTIFACTS_DIR }} install_dtbs
 
       - name: Copy the Modules
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          make INSTALL_MOD_PATH={{ env.MOD_TMP_DIR }} modules_install
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+                INSTALL_MOD_PATH={{ env.MOD_TMP_DIR }} modules_install
 
       - name: Create the Modules Initramfs
         run: |
           find {{ env.MOD_TMP_DIR }} -print0 | \
-          	cpio --null --create --verbose --format=newc \
+                cpio --null --create --verbose --format=newc \
                 > {{ env.ARTIFACTS_DIR }}/modules.cpio
