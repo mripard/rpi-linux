@@ -19,6 +19,8 @@ jobs:
       CROSS_COMPILE: aarch64-linux-gnu-
       ARTIFACTS_DIR: build-artifacts
       MOD_TMP_DIR: build-modules
+      INSTALL_MOD_PATH: {{ env.MOD_TMP_DIR }}
+      INSTALL_DTBS_PATH: {{ env.ARTIFACTS_DIR }}
 
     steps:
       - uses: actions/checkout@v3
@@ -38,15 +40,11 @@ jobs:
           cp arch/arm64/boot/Image.gz {{ env.ARTIFACTS_DIR }}
 
       - name: Package the Device Trees
-        env:
-          INSTALL_DTBS_PATH: {{ env.ARTIFACTS_DIR }}
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
           make install_dtbs
 
       - name: Copy the Modules
-        env:
-          INSTALL_MOD_PATH: {{ env.MOD_TMP_DIR }}
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
           make modules_install
