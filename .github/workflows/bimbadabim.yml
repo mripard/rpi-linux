@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Kernel, Modules and Device Trees
         run: |
-          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
                 -j {{ env.NUM_JOBS }} \
                 bcm2711_defconfig Image.gz modules dtbs
 
@@ -40,13 +40,13 @@ jobs:
       - name: Package the Device Trees
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
                 INSTALL_DTBS_PATH={{ env.ARTIFACTS_DIR }} install_dtbs
 
       - name: Copy the Modules
         run: |
           mkdir -p {{ env.ARTIFACTS_DIR }}
-          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make \
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
                 INSTALL_MOD_PATH={{ env.MOD_TMP_DIR }} modules_install
 
       - name: Create the Modules Initramfs
