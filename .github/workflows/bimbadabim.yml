@@ -38,7 +38,7 @@ jobs:
       - name: Package the Device Trees
         run: |
           mkdir -p ${{ env.ARTIFACTS_DIR }}
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_DTBS_PATH=${{ env.ARTIFACTS_DIR }} -j ${{ env.NUM_JOBS }} install_dtbs
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_DTBS_PATH=${{ env.ARTIFACTS_DIR }} -j ${{ env.NUM_JOBS }} dtbs_install
 
       - name: Copy the Modules
         run: |
