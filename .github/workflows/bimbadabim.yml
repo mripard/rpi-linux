@@ -32,21 +32,21 @@ jobs:
 
       - name: Copy the Kernel Image
         run: |
-          mkdir -p {{ env.ARTIFACTS_DIR }}
-          cp arch/arm64/boot/Image.gz {{ env.ARTIFACTS_DIR }}
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          cp arch/arm64/boot/Image.gz ${{ env.ARTIFACTS_DIR }}/
 
       - name: Package the Device Trees
         run: |
-          mkdir -p {{ env.ARTIFACTS_DIR }}
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_DTBS_PATH={{ env.ARTIFACTS_DIR }} -j ${{ env.NUM_JOBS }} install_dtbs
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_DTBS_PATH=${{ env.ARTIFACTS_DIR }} -j ${{ env.NUM_JOBS }} install_dtbs
 
       - name: Copy the Modules
         run: |
-          mkdir -p {{ env.ARTIFACTS_DIR }}
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH={{ env.MOD_TMP_DIR }} -j ${{ env.NUM_JOBS }} modules_install
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=${{ env.MOD_TMP_DIR }} -j ${{ env.NUM_JOBS }} modules_install
 
       - name: Create the Modules Initramfs
         run: |
-          find {{ env.MOD_TMP_DIR }} -print0 | \
+          find ${{ env.MOD_TMP_DIR }} -print0 | \
                 cpio --null --create --verbose --format=newc \
-                > {{ env.ARTIFACTS_DIR }}/modules.cpio
+                > ${{ env.ARTIFACTS_DIR }}/modules.cpio
