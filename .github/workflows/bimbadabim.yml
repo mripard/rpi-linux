@@ -28,9 +28,10 @@ jobs:
 
       - name: Build Kernel, Modules and Device Trees
         run: |
+          make ARCH=arm64 bcm2711_defconfig
           make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
                 -j {{ env.NUM_JOBS }} \
-                bcm2711_defconfig Image.gz modules dtbs
+                Image.gz modules dtbs
 
       - name: Copy the Kernel Image
         run: |
