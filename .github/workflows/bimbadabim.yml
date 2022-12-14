@@ -43,7 +43,7 @@ jobs:
       - name: Copy the Modules
         run: |
           mkdir -p ${{ env.MOD_TMP_DIR }}
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=${{ env.MOD_TMP_DIR }} -j ${{ env.NUM_JOBS }} modules_install
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=${{ env.MOD_TMP_DIR }}/usr -j ${{ env.NUM_JOBS }} modules_install
 
       - name: Create the Modules Initramfs
         run: |
