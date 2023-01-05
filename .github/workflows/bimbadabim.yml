@@ -68,7 +68,7 @@ jobs:
       - name: Download the Build Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: kernel-build-arm64-bcm2711.zip
+          name: kernel-build-arm64-bcm2711
 
       - name: Display structure of downloaded files
         run: ls -R
