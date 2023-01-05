@@ -83,7 +83,7 @@ jobs:
 
       - name: Start HDMI Capture
         run: |
-          sudo /home/pi/dradis /home/pi/test-single-output.yaml
+          /home/pi/dradis /home/pi/test-single-output.yaml
 
       - name: Remove Test Artifacts
         if: always()
