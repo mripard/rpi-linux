@@ -62,6 +62,7 @@ jobs:
   hdmi-test-arm64-pi4:
     name: HDMI Capture Test for the RaspberryPi4, on ARM64
     runs-on: [self-hosted, linux, arm64, pi4]
+    needs: build-arm64
 
     steps:
       - name: Download the Build Artifacts
