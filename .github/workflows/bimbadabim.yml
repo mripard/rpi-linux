@@ -70,5 +70,19 @@ jobs:
         with:
           name: kernel-build-arm64-bcm2711
 
-      - name: Display structure of downloaded files
-        run: ls -R
+      - name: Copy Build Artifacts to TFTP Folder
+        run: |
+          mkdir -p /srv/tftp/test
+          ln -s /srv/tftp/rootfs.cpio.xz /srv/tftp/test/
+          cp -a Image.gz broadcom/*.dtb overlays modules.cpio /srv/tftp/test/
+          touch /srv/tftp/test/overlays/README
+
+      - name: Test
+        run: |
+          ls -R /srv/tftp/test
+          pwd
+
+      - name: Remove Test Artifacts
+        if: always()
+        run: |
+          rm -rf /srv/tftp/test
