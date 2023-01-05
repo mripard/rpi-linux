@@ -58,3 +58,16 @@ jobs:
         with:
           name: kernel-build-arm64-bcm2711
           path: ${{ env.ARTIFACTS_DIR }}
+
+  hdmi-test-arm64-pi4:
+    name: HDMI Capture Test for the RaspberryPi4, on ARM64
+    runs-on: [self-hosted, linux, arm64, pi4]
+
+    steps:
+      - name: Download the Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: kernel-build-arm64-bcm2711.zip
+
+      - name: Display structure of downloaded files
+        run: ls -R
