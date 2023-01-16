@@ -72,10 +72,10 @@ jobs:
 
       - name: Copy Build Artifacts to TFTP Folder
         run: |
-          mkdir -p /srv/tftp/test
-          ln -s /srv/tftp/rootfs.cpio.xz /srv/tftp/test/
-          cp -a Image.gz broadcom/*.dtb overlays modules.cpio /srv/tftp/test/
-          touch /srv/tftp/test/overlays/README
+          mkdir -p ${HOME}/tftp/test
+          ln -s ${HOME}/tftp/rootfs.cpio.xz ${HOME}/tftp/test
+          cp -a Image.gz broadcom/*.dtb overlays modules.cpio ${HOME}/tftp/test/
+          touch ${HOME}/tftp/test/overlays/README
 
       - name: Power the DUT
         run: |
@@ -83,9 +83,9 @@ jobs:
 
       - name: Start HDMI Capture
         run: |
-          dradis /home/pi/test-single-output.yaml
+          dradis /usr/share/dradis/samples/test-single-mode-720p.yaml
 
       - name: Remove Test Artifacts
         if: always()
         run: |
-          rm -rf /srv/tftp/test
+          rm -rf ${HOME}/tftp/test
