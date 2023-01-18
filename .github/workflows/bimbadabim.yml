@@ -79,11 +79,16 @@ jobs:
 
       - name: Power the DUT
         run: |
-          sleep 15
+          gpioset 0 18=1
 
       - name: Start HDMI Capture
         run: |
           dradis /usr/share/dradis/samples/test-single-mode-720p.yaml
+
+      - name: Power off the DUT
+        if: always()
+        run: |
+          gpioset 0 18=0
 
       - name: Remove Test Artifacts
         if: always()
