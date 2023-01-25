@@ -948,9 +948,10 @@ static void vc4_hdmi_disable_scrambling(struct drm_encoder *encoder)
 
 static void vc4_hdmi_scrambling_wq(struct work_struct *work)
 {
-	struct vc4_hdmi *vc4_hdmi = container_of(to_delayed_work(work),
-						 struct vc4_hdmi,
-						 scrambling_work);
+	struct vc4_hdmi *vc4_hdmi =
+		container_of_const(to_delayed_work(work),
+				   struct vc4_hdmi,
+				   scrambling_work);
 
 	if (drm_scdc_get_scrambling_status(vc4_hdmi->ddc))
 		return;

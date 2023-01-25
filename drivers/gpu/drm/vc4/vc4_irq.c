@@ -63,7 +63,7 @@ static void
 vc4_overflow_mem_work(struct work_struct *work)
 {
 	struct vc4_dev *vc4 =
-		container_of(work, struct vc4_dev, overflow_mem_work);
+		container_of_const(work, struct vc4_dev, overflow_mem_work);
 	struct vc4_bo *bo;
 	int bin_bo_slot;
 	struct vc4_exec_info *exec;
