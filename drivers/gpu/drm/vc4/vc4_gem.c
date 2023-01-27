@@ -315,7 +315,7 @@ static void
 vc4_reset_work(struct work_struct *work)
 {
 	struct vc4_dev *vc4 =
-		container_of(work, struct vc4_dev, hangcheck.reset_work);
+		container_of_const(work, struct vc4_dev, hangcheck.reset_work);
 
 	vc4_save_hang_state(&vc4->base);
 
@@ -1039,7 +1039,8 @@ vc4_job_handle_completed(struct vc4_dev *vc4)
 
 static void vc4_seqno_cb_work(struct work_struct *work)
 {
-	struct vc4_seqno_cb *cb = container_of(work, struct vc4_seqno_cb, work);
+	struct vc4_seqno_cb *cb =
+		container_of_const(work, struct vc4_seqno_cb, work);
 
 	cb->func(cb);
 }
@@ -1077,7 +1078,7 @@ static void
 vc4_job_done_work(struct work_struct *work)
 {
 	struct vc4_dev *vc4 =
-		container_of(work, struct vc4_dev, job_done_work);
+		container_of_const(work, struct vc4_dev, job_done_work);
 
 	vc4_job_handle_completed(vc4);
 }

@@ -349,7 +349,7 @@ complete:
 
 static void bin_bo_release(struct kref *ref)
 {
-	struct vc4_dev *vc4 = container_of(ref, struct vc4_dev, bin_bo_kref);
+	struct vc4_dev *vc4 = container_of_const(ref, struct vc4_dev, bin_bo_kref);
 
 	if (WARN_ON_ONCE(!vc4->bin_bo))
 		return;

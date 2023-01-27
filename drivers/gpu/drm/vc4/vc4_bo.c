@@ -609,7 +609,7 @@ out:
 static void vc4_bo_cache_time_work(struct work_struct *work)
 {
 	struct vc4_dev *vc4 =
-		container_of(work, struct vc4_dev, bo_cache.time_work);
+		container_of_const(work, struct vc4_dev, bo_cache.time_work);
 	struct drm_device *dev = &vc4->base;
 
 	mutex_lock(&vc4->bo_lock);

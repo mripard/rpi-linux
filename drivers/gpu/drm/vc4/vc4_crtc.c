@@ -869,7 +869,7 @@ vc4_async_page_flip_complete(struct vc4_async_flip_state *flip_state)
 static void vc4_async_page_flip_seqno_complete(struct vc4_seqno_cb *cb)
 {
 	struct vc4_async_flip_state *flip_state =
-		container_of(cb, struct vc4_async_flip_state, cb.seqno);
+		container_of_const(cb, struct vc4_async_flip_state, cb.seqno);
 	struct vc4_bo *bo = NULL;
 
 	if (flip_state->old_fb) {
@@ -897,7 +897,7 @@ static void vc4_async_page_flip_fence_complete(struct dma_fence *fence,
 					       struct dma_fence_cb *cb)
 {
 	struct vc4_async_flip_state *flip_state =
-		container_of(cb, struct vc4_async_flip_state, cb.fence);
+		container_of_const(cb, struct vc4_async_flip_state, cb.fence);
 
 	vc4_async_page_flip_complete(flip_state);
 	dma_fence_put(fence);
