@@ -1,0 +1,96 @@
+name: HDMI Build Testing
+
+on:
+  pull_request:
+    branches: [ "rpi/*"]
+
+  push:
+    branches: [ "rpi/*"]
+
+env:
+  NUM_JOBS: 40
+
+jobs:
+  build-arm64:
+    name: Kernel Build for ARM64
+    runs-on: [self-hosted, linux, x64]
+    env:
+      ARTIFACTS_DIR: ${{ github.workspace }}/build-artifacts
+      MOD_TMP_DIR: ${{ github.workspace }}/build-modules
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu kmod
+
+      - name: Build Kernel, Modules and Device Trees
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j ${{ env.NUM_JOBS }} bcm2711_defconfig Image.gz modules dtbs
+
+      - name: Copy the Kernel Image
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          cp arch/arm64/boot/Image.gz ${{ env.ARTIFACTS_DIR }}/
+
+      - name: Package the Device Trees
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_DTBS_PATH=${{ env.ARTIFACTS_DIR }} -j ${{ env.NUM_JOBS }} dtbs_install
+
+      - name: Copy the Modules
+        run: |
+          mkdir -p ${{ env.MOD_TMP_DIR }}
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=${{ env.MOD_TMP_DIR }}/usr -j ${{ env.NUM_JOBS }} modules_install
+
+      - name: Create the Modules Initramfs
+        run: |
+          pushd ${{ env.MOD_TMP_DIR }}
+          find . -print0 | \
+                cpio --null --create --verbose --format=newc \
+                > ${{ env.ARTIFACTS_DIR }}/modules.cpio
+          popd
+
+      - name: Upload the Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-build-arm64-bcm2711
+          path: ${{ env.ARTIFACTS_DIR }}
+
+  hdmi-test-arm64-pi4:
+    name: HDMI Capture Test for the RaspberryPi4, on ARM64
+    runs-on: [self-hosted, linux, arm64, pi4]
+    needs: build-arm64
+
+    steps:
+      - name: Download the Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: kernel-build-arm64-bcm2711
+
+      - name: Copy Build Artifacts to TFTP Folder
+        run: |
+          mkdir -p /home/runner/tftp/files/test
+          ln -s /home/runner/tftp/files/rootfs.cpio.xz /home/runner/tftp/files/test
+          cp -a Image.gz broadcom/*.dtb overlays modules.cpio /home/runner/tftp/files/test/
+          touch /home/runner/tftp/files/test/overlays/README
+
+      - name: Power the DUT
+        run: |
+          gpioset 0 18=1
+
+      - name: Start HDMI Capture
+        run: |
+          dradis /usr/share/dradis/samples/test-single-mode-720p.yaml
+
+      - name: Power off the DUT
+        if: always()
+        run: |
+          gpioset 0 18=0
+
+      - name: Remove Test Artifacts
+        if: always()
+        run: |
+          rm -rf /home/runner/tftp/files/test
