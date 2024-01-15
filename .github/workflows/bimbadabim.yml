@@ -2,10 +2,10 @@ name: HDMI Build Testing
 
 on:
   pull_request:
-    branches: [ "rpi-*"]
+    branches: [ "rpi/*"]
 
   push:
-    branches: [ "rpi-*"]
+    branches: [ "rpi/*"]
 
 env:
   NUM_JOBS: 40
