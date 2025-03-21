@@ -54,7 +54,7 @@ jobs:
           popd
 
       - name: Upload the Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kernel-build-arm64-bcm2711
           path: ${{ env.ARTIFACTS_DIR }}
