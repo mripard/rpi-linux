@@ -67,9 +67,14 @@ jobs:
       KASA_IP: 192.168.20.50
 
     steps:
-      - name: Install Kasa Tools
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
         run: |
-          pip install --user python-kasa
+          python -m pip install --upgrade pip python-kasa
 
       - name: Download the Build Artifacts
         uses: actions/download-artifact@v4
