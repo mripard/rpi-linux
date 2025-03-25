@@ -63,8 +63,14 @@ jobs:
     name: HDMI Capture Test for the RaspberryPi4, on ARM64
     runs-on: [self-hosted, linux, arm64, pi4]
     needs: build-arm64
+    env:
+      KASA_IP: 192.168.20.50
 
     steps:
+      - name: Install Kasa Tools
+        run: |
+          pip install --user python-kasa
+
       - name: Download the Build Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -79,7 +85,8 @@ jobs:
 
       - name: Power the DUT
         run: |
-          gpioset 0 18=1
+          kasa --username ${{ secrets.KASA_USERNAME }} --password ${{ secrets.KASA_PASSWORD }} --host ${{ env.KASA_IP }} off
+          kasa --username ${{ secrets.KASA_USERNAME }} --password ${{ secrets.KASA_PASSWORD }} --host ${{ env.KASA_IP }} on
 
       - name: Start HDMI Capture
         run: |
@@ -88,7 +95,7 @@ jobs:
       - name: Power off the DUT
         if: always()
         run: |
-          gpioset 0 18=0
+          kasa --username ${{ secrets.KASA_USERNAME }} --password ${{ secrets.KASA_PASSWORD }} --host ${{ env.KASA_IP }} off
 
       - name: Remove Test Artifacts
         if: always()
